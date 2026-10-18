@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Read2Give - Study & Read for Impact</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cream: {
+                            50: '#FDFBF7',
+                            100: '#F7F3EA',
+                            200: '#EFE7D8',
+                            800: '#4A443A',
+                            900: '#2C2720'
+                        },
+                        sage: {
+                            50: '#F4F7F4',
+                            100: '#E3EBE3',
+                            500: '#5B8C67',
+                            600: '#477051',
+                            700: '#36543D'
+                        },
+                        terracotta: {
+                            500: '#D97757',
+                            600: '#C25E3E'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        serif: ['Lora', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #FDFBF7;
+            color: #2C2720;
+        }
+        .reader-serif { font-family: 'Lora', serif; }
+        .theme-paper { background-color: #FDFBF7; color: #2C2720; }
+        .theme-sepia { background-color: #F4ECD8; color: #3B3222; }
+        .theme-night { background-color: #1A1917; color: #D5D0C7; }
+        .theme-sage { background-color: #EBF0EC; color: #243328; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .device-frame {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .device-mobile {
+            width: 390px;
+            height: 844px;
+            border-radius: 40px;
+            border: 12px solid #2C2720;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        }
+        .device-desktop {
+            width: 100%;
+            max-width: 1100px;
+            height: 90vh;
+            border-radius: 16px;
+            border: 1px solid #EFE7D8;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.07);
+        }
+    </style>
+</head>
+<body class="bg-cream-100 min-h-screen flex flex-col items-center justify-between p-0 md:p-4 selection:bg-sage-100 selection:text-sage-700">
+
+    <!-- Top Control Bar (Role & Viewport Switchers) -->
+    <header class="w-full max-w-6xl flex flex-wrap items-center justify-between gap-3 p-3 mb-2 bg-white/80 backdrop-blur-md rounded-2xl border border-cream-200 shadow-sm text-xs md:text-sm">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-sage-500 text-white flex items-center justify-center font-bold text-base shadow-sm">
+                <i class="fa-solid fa-book-open"></i>
+            </div>
+            <div>
+                <span class="font-bold text-cream-900 block leading-none">Read2Give</span>
+                <span class="text-[10px] text-cream-800 opacity-70">Zen & Daily Study Mode</span>
+            </div>
+        </div>
+
+        <!-- Role Selector Switch -->
+        <div class="flex items-center bg-cream-100 p-1 rounded-xl border border-cream-200">
+            <button onclick="setRole('student')" id="btn-role-student" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-white text-cream-900 shadow-sm">
+                <i class="fa-solid fa-graduation-cap mr-1 text-sage-600"></i> Student (Free)
+            </button>
+            <button onclick="setRole('adult')" id="btn-role-adult" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-cream-800 opacity-70 hover:opacity-100">
+                <i class="fa-solid fa-user-heart mr-1 text-terracotta-500"></i> Adult (Sponsor)
+            </button>
+            <button onclick="setRole('author')" id="btn-role-author" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-cream-800 opacity-70 hover:opacity-100">
+                <i class="fa-solid fa-feather mr-1 text-amber-600"></i> Author / Publisher
+            </button>
+        </div>
+
+        <!-- Device Mode Switcher -->
+        <div class="hidden sm:flex items-center bg-cream-100 p-1 rounded-xl border border-cream-200">
+            <button onclick="setDevice('mobile')" id="btn-dev-mobile" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-white shadow-sm text-cream-900">
+                <i class="fa-solid fa-mobile-screen mr-1"></i> Mobile
+            </button>
+            <button onclick="setDevice('desktop')" id="btn-dev-desktop" class="px-2.5 py-1 rounded-lg text-xs font-medium text-cream-800 opacity-70 hover:opacity-100">
+                <i class="fa-solid fa-laptop mr-1"></i> Desktop
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container Frame -->
+    <main id="app-viewport" class="device-frame device-mobile bg-cream-50 relative overflow-hidden flex flex-col my-auto transition-all duration-300">
+        
+        <!-- App Status Bar (Mobile View) -->
+        <div id="status-bar" class="w-full px-6 py-2 flex justify-between items-center text-xs font-medium text-cream-800 bg-cream-50 border-b border-cream-100/50">
+            <span>09:41</span>
+            <div class="flex items-center gap-1.5 text-[11px]">
+                <i class="fa-solid fa-signal"></i>
+                <i class="fa-solid fa-wifi"></i>
+                <i class="fa-solid fa-battery-full"></i>
+            </div>
+        </div>
+
+        <!-- APP CONTENT PAGES -->
+        <div class="flex-1 overflow-y-auto no-scrollbar relative flex flex-col">
+
+            <!-- 1. SPLASH PAGE -->
+            <section id="page-splash" class="app-page hidden min-h-full p-6 flex flex-col justify-between text-center bg-cream-50">
+                <div class="pt-10">
+                    <div class="w-20 h-20 mx-auto bg-sage-100 text-sage-600 rounded-3xl flex items-center justify-center text-3xl mb-4 shadow-sm border border-sage-200">
+                        <i class="fa-solid fa-book-bookmark"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-cream-900 mb-2">Read2Give</h1>
+                    <p class="text-xs text-cream-800 opacity-80 max-w-xs mx-auto">Turn your daily reading habits into meaningful educational support for children in need.</p>
+                </div>
+
+                <div class="space-y-3 my-auto py-6">
+                    <div class="p-4 bg-white rounded-2xl border border-cream-200 text-left shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-sage-50 text-sage-600 flex items-center justify-center font-bold">1</div>
+                            <div>
+                                <h4 class="text-xs font-bold text-cream-900">Comfortable Reading</h4>
+                                <p class="text-[11px] text-cream-800 opacity-70">Customizable themes & Pomodoro study timer</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-white rounded-2xl border border-cream-200 text-left shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">2</div>
+                            <div>
+                                <h4 class="text-xs font-bold text-cream-900">Earn Reading Points</h4>
+                                <p class="text-[11px] text-cream-800 opacity-70">Earn points by finishing chapters and daily quests</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-white rounded-2xl border border-cream-200 text-left shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-terracotta-50 text-terracotta-500 flex items-center justify-center font-bold">3</div>
+                            <div>
+                                <h4 class="text-xs font-bold text-cream-900">Support Education</h4>
+                                <p class="text-[11px] text-cream-800 opacity-70">Convert points to books, supplies, & learning devices</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pb-6 space-y-2">
+                    <button onclick="navigateTo('home')" class="w-full py-3.5 bg-sage-600 hover:bg-sage-700 text-white rounded-2xl font-medium text-sm shadow-sm transition-all">
+                        Get Started
+                    </button>
+                    <button onclick="navigateTo('home')" class="w-full py-2 text-xs text-cream-800 opacity-70 hover:opacity-100">
+                        I already have an account
+                    </button>
+                </div>
+            </section>
+
+            <!-- 2. HOME PAGE -->
+            <section id="page-home" class="app-page min-h-full p-5 space-y-5 bg-cream-50 pb-20">
+                <!-- User Welcome Header -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-xs text-cream-800 opacity-70">Welcome back,</span>
+                        <h2 class="text-lg font-bold text-cream-900 flex items-center gap-2">
+                            <span id="home-user-name">Alex Johnson</span>
+                            <span class="text-xs font-normal px-2 py-0.5 bg-sage-100 text-sage-700 rounded-full" id="role-badge">Student</span>
+                        </h2>
+                    </div>
+                    <!-- Points Display -->
+                    <div onclick="navigateTo('earn')" class="cursor-pointer flex items-center gap-2 bg-white px-3 py-1.5 rounded-2xl border border-cream-200 shadow-sm">
+                        <i class="fa-solid fa-star text-amber-500 text-sm"></i>
+                        <span class="text-xs font-bold text-cream-900" id="user-points-display">120</span>
+                        <span class="text-[10px] text-cream-800 opacity-60">pts</span>
+                    </div>
+                </div>
+
+                <!-- Daily Study Pomodoro Banner -->
+                <div class="p-4 bg-sage-600 text-white rounded-2xl flex items-center justify-between shadow-sm">
+                    <div class="space-y-1">
+                        <span class="text-[10px] tracking-wider uppercase opacity-80 font-semibold">Study Focus Mode</span>
+                        <h3 class="text-sm font-bold">Today's Reading Target</h3>
+                        <p class="text-[11px] opacity-90">Read for 25 mins to earn +20 bonus points</p>
+                    </div>
+                    <button onclick="navigateTo('reader')" class="px-3 py-2 bg-white text-sage-700 rounded-xl font-medium text-xs shadow-sm hover:bg-cream-50 transition-colors shrink-0">
+                        Start Reading
+                    </button>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-cream-800 opacity-40 text-xs"></i>
+                    <input type="text" placeholder="Search books, authors, genres..." class="w-full pl-9 pr-4 py-2.5 bg-white border border-cream-200 rounded-xl text-xs text-cream-900 focus:outline-none focus:border-sage-500 shadow-sm">
+                </div>
+
+                <!-- Book Categories -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-cream-900 uppercase tracking-wider opacity-80">Recommended Genres</h3>
+                        <span class="text-[11px] text-sage-600 font-medium">See All</span>
+                    </div>
+                    <div class="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                        <span class="px-3 py-1.5 bg-sage-500 text-white rounded-xl text-xs font-medium shrink-0 shadow-sm">All Books</span>
+                        <span class="px-3 py-1.5 bg-white text-cream-800 border border-cream-200 rounded-xl text-xs font-medium shrink-0">Youth Literature</span>
+                        <span class="px-3 py-1.5 bg-white text-cream-800 border border-cream-200 rounded-xl text-xs font-medium shrink-0">Self Growth</span>
+                        <span class="px-3 py-1.5 bg-white text-cream-800 border border-cream-200 rounded-xl text-xs font-medium shrink-0">Science</span>
+                        <span class="px-3 py-1.5 bg-white text-cream-800 border border-cream-200 rounded-xl text-xs font-medium shrink-0">Illustrated</span>
+                    </div>
+                </div>
+
+                <!-- Featured Books Grid -->
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold text-cream-900 uppercase tracking-wider opacity-80">Featured eBooks</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Book Card 1 -->
+                        <div onclick="navigateTo('reader')" class="cursor-pointer bg-white p-3 rounded-2xl border border-cream-200 shadow-sm hover:border-sage-300 transition-all flex flex-col justify-between">
+                            <div>
+                                <div class="w-full h-32 bg-amber-100 rounded-xl mb-2 flex items-center justify-center relative overflow-hidden border border-amber-200/50">
+                                    <i class="fa-solid fa-crown text-3xl text-amber-500 opacity-60"></i>
+                                    <span class="absolute top-2 left-2 bg-sage-600 text-white text-[9px] px-1.5 py-0.5 rounded font-medium">Free Access</span>
+                                </div>
+                                <h4 class="text-xs font-bold text-cream-900 line-clamp-1">The Little Prince</h4>
+                                <p class="text-[10px] text-cream-800 opacity-60">Antoine de Saint-Exupéry</p>
+                            </div>
+                            <div class="mt-2 pt-2 border-t border-cream-100 flex items-center justify-between text-[10px] text-cream-800 opacity-70">
+                                <span><i class="fa-regular fa-clock mr-1"></i>18 Ch.</span>
+                                <span class="text-amber-600 font-semibold">+5 pts/ch</span>
+                            </div>
+                        </div>
+
+                        <!-- Book Card 2 -->
+                        <div onclick="navigateTo('reader')" class="cursor-pointer bg-white p-3 rounded-2xl border border-cream-200 shadow-sm hover:border-sage-300 transition-all flex flex-col justify-between">
+                            <div>
+                                <div class="w-full h-32 bg-blue-100 rounded-xl mb-2 flex items-center justify-center relative overflow-hidden border border-blue-200/50">
+                                    <i class="fa-solid fa-spider text-3xl text-blue-500 opacity-60"></i>
+                                    <span id="book-2-badge" class="absolute top-2 left-2 bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded font-medium">3 Ch. Free Trial</span>
+                                </div>
+                                <h4 class="text-xs font-bold text-cream-900 line-clamp-1">Charlotte's Web</h4>
+                                <p class="text-[10px] text-cream-800 opacity-60">E.B. White</p>
+                            </div>
+                            <div class="mt-2 pt-2 border-t border-cream-100 flex items-center justify-between text-[10px] text-cream-800 opacity-70">
+                                <span><i class="fa-regular fa-clock mr-1"></i>22 Ch.</span>
+                                <span class="text-amber-600 font-semibold">+5 pts/ch</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Author Portal Banner -->
+                <div id="author-cta-card" class="p-4 bg-cream-200/60 rounded-2xl border border-cream-200 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-xs font-bold text-cream-900">Are you an Author or Publisher?</h4>
+                        <p class="text-[10px] text-cream-800 opacity-70">Publish your eBooks to reach new readers and drive social impact.</p>
+                    </div>
+                    <button onclick="setRole('author'); navigateTo('author-portal')" class="px-3 py-1.5 bg-cream-900 text-white text-xs font-medium rounded-xl shrink-0">
+                        Publish Book
+                    </button>
+                </div>
+            </section>
+
+            <!-- 3. READING EBOOK PAGE (Zen Daily Study Mode) -->
+            <section id="page-reader" class="app-page hidden min-h-full flex flex-col theme-paper transition-colors duration-200">
+                <!-- Reader Header -->
+                <div class="px-4 py-3 flex items-center justify-between border-b border-cream-200/40">
+                    <button onclick="navigateTo('home')" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/5">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <div class="text-center">
+                        <h3 class="text-xs font-bold line-clamp-1">The Little Prince - Chapter 1</h3>
+                        <span class="text-[10px] opacity-60">Page 3 of 18</span>
+                    </div>
+                    <button onclick="toggleReaderControls()" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/5">
+                        <i class="fa-solid fa-sliders text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Study Toolkit Bar (Pomodoro Timer & Notes) -->
+                <div class="px-4 py-2 bg-black/5 flex items-center justify-between text-xs border-b border-cream-200/20">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-regular fa-hourglass-half text-sage-600"></i>
+                        <span class="font-mono text-[11px] font-bold" id="pomodoro-timer">24:50</span>
+                        <button onclick="togglePomodoro()" id="btn-pomo" class="text-[10px] px-2 py-0.5 bg-sage-600 text-white rounded-md">Pause</button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openNoteModal()" class="text-[10px] px-2 py-0.5 bg-white border border-cream-200 rounded-md font-medium text-cream-900">
+                            <i class="fa-regular fa-pen-to-square mr-1"></i> Take Note
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Customizer Panel -->
+                <div id="reader-controls-panel" class="hidden px-4 py-3 bg-white border-b border-cream-200 space-y-3 text-cream-900 text-xs shadow-md">
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium opacity-80">Font Size & Style:</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="changeFontSize(-1)" class="w-7 h-7 bg-cream-100 rounded-lg font-bold">A-</button>
+                            <button onclick="changeFontSize(1)" class="w-7 h-7 bg-cream-100 rounded-lg font-bold">A+</button>
+                            <button onclick="toggleFontFamily()" id="btn-font-family" class="px-2 py-1 bg-cream-100 rounded-lg font-medium text-[11px]">Serif</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium opacity-80">Eye Comfort Theme:</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="setReaderTheme('paper')" class="w-6 h-6 rounded-full border border-cream-300 bg-[#FDFBF7]" title="Paper"></button>
+                            <button onclick="setReaderTheme('sepia')" class="w-6 h-6 rounded-full border border-cream-300 bg-[#F4ECD8]" title="Sepia"></button>
+                            <button onclick="setReaderTheme('sage')" class="w-6 h-6 rounded-full border border-cream-300 bg-[#EBF0EC]" title="Sage"></button>
+                            <button onclick="setReaderTheme('night')" class="w-6 h-6 rounded-full border border-cream-300 bg-[#1A1917]" title="Night"></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Book Text Area -->
+                <div class="flex-1 p-5 overflow-y-auto no-scrollbar space-y-4 leading-relaxed reader-serif text-sm" id="reader-text-container">
+                    <p class="font-bold text-center text-base font-sans my-2">"What is essential is invisible to the eye."</p>
+                    <p>
+                        Once when I was six years old I saw a magnificent picture in a book called True Stories from Nature, about the primeval forest. It was a picture of a boa constrictor in the act of swallowing an animal...
+                    </p>
+                    <p>
+                        I pondered deeply, then, over the adventures of the jungle. And after some work with a colored pencil I succeeded in making my first drawing. My Drawing Number One looked like this:
+                    </p>
+                    <div class="py-4 text-center">
+                        <div class="w-48 h-24 mx-auto bg-black/5 rounded-2xl flex items-center justify-center border border-dashed border-black/20 text-xs text-cream-800 opacity-60">
+                            [ Illustration: A Hat or Elephant swallowing Snake ]
+                        </div>
+                    </div>
+                    <p>
+                        I showed my masterpiece to the grown-ups, and asked them whether the drawing frightened them. But they answered: "Frightened? Why should any one be frightened by a hat?"
+                    </p>
+                    <p>
+                        My drawing was not a picture of a hat. It was a picture of a boa constrictor digesting an elephant. But since the grown-ups were not able to understand it, I made another drawing...
+                    </p>
+                </div>
+
+                <!-- Bottom Reader Toolbar -->
+                <div class="p-4 border-t border-cream-200/40 space-y-2">
+                    <div class="w-full bg-black/10 rounded-full h-1.5 overflow-hidden">
+                        <div class="bg-sage-600 h-full w-[25%] rounded-full"></div>
+                    </div>
+                    <div class="flex items-center justify-between pt-1">
+                        <button class="px-3 py-1.5 bg-black/5 rounded-xl text-xs font-medium"><i class="fa-solid fa-arrow-left mr-1"></i> Prev</button>
+                        <button onclick="completeChapter()" class="px-4 py-1.5 bg-sage-600 text-white rounded-xl text-xs font-medium shadow-sm hover:bg-sage-700">
+                            Finish Chapter (+5 pts) <i class="fa-solid fa-check ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. EARN POINTS PAGE -->
+            <section id="page-earn" class="app-page hidden min-h-full p-5 space-y-5 bg-cream-50 pb-20">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-cream-900">Earn Points</h2>
+                        <p class="text-xs text-cream-800 opacity-70">Complete everyday reading activities</p>
+                    </div>
+                    <div class="bg-amber-100 border border-amber-200 px-3 py-1.5 rounded-2xl flex items-center gap-1.5">
+                        <i class="fa-solid fa-star text-amber-500 text-sm"></i>
+                        <span class="text-xs font-bold text-amber-900" id="earn-page-points">120 pts</span>
+                    </div>
+                </div>
+
+                <!-- Daily Streak Check-in -->
+                <div class="p-4 bg-white rounded-2xl border border-cream-200 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xs font-bold text-cream-900">Daily Reading Check-in</h3>
+                        <span class="text-[10px] text-sage-600 font-semibold">3-Day Streak!</span>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1.5 text-center text-[10px]">
+                        <div class="p-2 bg-sage-100 text-sage-700 rounded-xl font-bold">M<br>✓</div>
+                        <div class="p-2 bg-sage-100 text-sage-700 rounded-xl font-bold">T<br>✓</div>
+                        <div class="p-2 bg-sage-500 text-white rounded-xl font-bold">W<br>+5</div>
+                        <div class="p-2 bg-cream-100 text-cream-800 rounded-xl">T<br>+5</div>
+                        <div class="p-2 bg-cream-100 text-cream-800 rounded-xl">F<br>+5</div>
+                        <div class="p-2 bg-cream-100 text-cream-800 rounded-xl">S<br>+10</div>
+                        <div class="p-2 bg-amber-100 text-amber-800 rounded-xl font-bold">S<br>+20</div>
+                    </div>
+                    <button onclick="claimDailyPoints()" id="btn-daily-claim" class="w-full py-2 bg-sage-600 text-white rounded-xl text-xs font-medium shadow-sm hover:bg-sage-700">
+                        Claim Today (+5 Points)
+                    </button>
+                </div>
+
+                <!-- Earn Quests List -->
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold text-cream-900 uppercase tracking-wider opacity-80">Reading Quests</h3>
+                    
+                    <div class="p-3 bg-white rounded-2xl border border-cream-200 shadow-sm flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-sage-50 text-sage-600 flex items-center justify-center">
+                                <i class="fa-solid fa-book-open text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-cream-900">Finish 1 Chapter</h4>
+                                <p class="text-[10px] text-cream-800 opacity-60">Read any eBook chapter</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100">+5 pts</span>
+                    </div>
+
+                    <div class="p-3 bg-white rounded-2xl border border-cream-200 shadow-sm flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                                <i class="fa-solid fa-circle-check text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-cream-900">Complete Entire Book</h4>
+                                <p class="text-[10px] text-cream-800 opacity-60">Finish reading a full eBook</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100">+20 pts</span>
+                    </div>
+
+                    <div class="p-3 bg-white rounded-2xl border border-cream-200 shadow-sm flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                                <i class="fa-solid fa-share-nodes text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-cream-900">Share with Friends</h4>
+                                <p class="text-[10px] text-cream-800 opacity-60">Invite friends to read together</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100">+10 pts</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. DONATE & REDEEM PAGE -->
+            <section id="page-donate" class="app-page hidden min-h-full p-5 space-y-5 bg-cream-50 pb-20">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-cream-900">Donate & Redeem</h2>
+                        <p class="text-xs text-cream-800 opacity-70">Turn points or donations into real impact</p>
+                    </div>
+                    <div class="bg-amber-100 border border-amber-200 px-3 py-1.5 rounded-2xl flex items-center gap-1.5">
+                        <i class="fa-solid fa-star text-amber-500 text-sm"></i>
+                        <span class="text-xs font-bold text-amber-900" id="donate-page-points">120 pts</span>
+                    </div>
+                </div>
+
+                <!-- Adult Sponsor Donation Card -->
+                <div id="adult-sponsor-card" class="p-4 bg-terracotta-500 text-white rounded-2xl shadow-sm space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] uppercase font-bold tracking-wider opacity-80">For Adult Readers</span>
+                        <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">Tax Deductible</span>
+                    </div>
+                    <h3 class="text-sm font-bold">Unlock Full eBook + Support Children</h3>
+                    <p class="text-[11px] opacity-90">Micro-donate $2.99 to unlock the rest of the book and fund educational resources directly.</p>
+                    <button onclick="showTaxReceiptModal()" class="w-full py-2 bg-white text-terracotta-600 font-medium rounded-xl text-xs shadow-sm mt-1 hover:bg-cream-50">
+                        Donate $2.99 & Get Tax Receipt
+                    </button>
+                </div>
+
+                <!-- Redeem Points Items -->
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold text-cream-900 uppercase tracking-wider opacity-80">Redeem Points for Support</h3>
+
+                    <div class="p-4 bg-white rounded-2xl border border-cream-200 shadow-sm flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 text-lg font-bold shrink-0">
+                                <i class="fa-solid fa-pencil"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-cream-900">School Supplies Set</h4>
+                                <p class="text-[10px] text-cream-800 opacity-60">Notebooks, pens, and backpacks for students</p>
+                            </div>
+                        </div>
+                        <button onclick="redeemReward('School Supplies Set', 50)" class="px-3 py-2 bg-sage-600 hover:bg-sage-700 text-white font-medium text-xs rounded-xl shrink-0 shadow-sm">
+                            50 pts
+                        </button>
+                    </div>
+
+                    <div class="p-4 bg-white rounded-2xl border border-cream-200 shadow-sm flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 text-lg font-bold shrink-0">
+                                <i class="fa-solid fa-tablet-screen-button"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-cream-900">Learning Device Fund</h4>
+                                <p class="text-[10px] text-cream-800 opacity-60">e-Readers & laptops for rural schools</p>
+                            </div>
+                        </div>
+                        <button onclick="redeemReward('Learning Device Fund', 200)" class="px-3 py-2 bg-sage-600 hover:bg-sage-700 text-white font-medium text-xs rounded-xl shrink-0 shadow-sm">
+                            200 pts
+                        </button>
+                    </div>
+
+                    <div class="p-4 bg-white rounded-2xl border border-cream-200 shadow-sm flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 text-lg font-bold shrink-0">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-cream-900">Education Fund</h4>
+                                <p class="text-[10px] text-cream-800 opacity-60">Scholarships & meal programs</p>
+                            </div>
+                        </div>
+                        <button onclick="redeemReward('Education Fund', 100)" class="px-3 py-2 bg-sage-600 hover:bg-sage-700 text-white font-medium text-xs rounded-xl shrink-0 shadow-sm">
+                            100 pts
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. IMPACT PAGE -->
+            <section id="page-impact" class="app-page hidden min-h-full p-5 space-y-5 bg-cream-50 pb-20">
+                <div>
+                    <h2 class="text-lg font-bold text-cream-900">Real Impact</h2>
+                    <p class="text-xs text-cream-800 opacity-70">Transparent, verifiable social contributions</p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="p-3 bg-white rounded-2xl border border-cream-200 shadow-sm">
+                        <span class="block text-lg font-bold text-sage-600">12,580</span>
+                        <span class="text-[10px] text-cream-800 opacity-70">Children Supported</span>
+                    </div>
+                    <div class="p-3 bg-white rounded-2xl border border-cream-200 shadow-sm">
+                        <span class="block text-lg font-bold text-amber-600">8</span>
+                        <span class="text-[10px] text-cream-800 opacity-70">Partner Foundations</span>
+                    </div>
+                    <div class="p-3 bg-white rounded-2xl border border-cream-200 shadow-sm">
+                        <span class="block text-lg font-bold text-terracotta-500">1.24M</span>
+                        <span class="text-[10px] text-cream-800 opacity-70">Points Donated</span>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold text-cream-900 uppercase tracking-wider opacity-80">Verified Partner Foundations</h3>
+                    
+                    <div class="p-3.5 bg-white rounded-2xl border border-cream-200 shadow-sm flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-cream-100 flex items-center justify-center font-bold text-sage-700 text-xs">
+                                ED
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-cream-900">Education Opportunity Foundation</h4>
+                                <p class="text-[10px] text-cream-800 opacity-60">Delivered 4,500+ textbook packages</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-circle-check text-sage-500 text-sm"></i>
+                    </div>
+
+                    <div class="p-3.5 bg-white rounded-2xl border border-cream-200 shadow-sm flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-cream-100 flex items-center justify-center font-bold text-terracotta-600 text-xs">
+                                RF
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-cream-900">Read For Future Foundation</h4>
+                                <p class="text-[10px] text-cream-800 opacity-60">Built 12 rural community libraries</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-circle-check text-sage-500 text-sm"></i>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-white rounded-2xl border border-cream-200 shadow-sm space-y-2">
+                    <div class="flex items-center gap-2 text-xs font-bold text-cream-900">
+                        <i class="fa-solid fa-quote-left text-sage-500"></i>
+                        <span>Student Impact Story</span>
+                    </div>
+                    <p class="text-xs text-cream-800 opacity-80 leading-relaxed italic">
+                        "I was so happy to receive brand new books and study supplies! Reading 'The Little Prince' inspired me so much. Thank you to everyone reading on Read2Give!"
+                    </p>
+                    <span class="block text-[10px] text-cream-800 opacity-50 text-right">- Mintra, Rural School Student</span>
+                </div>
+            </section>
+
+            <!-- 7. PROFILE PAGE -->
+            <section id="page-profile" class="app-page hidden min-h-full p-5 space-y-5 bg-cream-50 pb-20">
+                <div class="flex items-center gap-4 p-4 bg-white rounded-2xl border border-cream-200 shadow-sm">
+                    <div class="w-14 h-14 rounded-2xl bg-sage-100 text-sage-600 flex items-center justify-center font-bold text-xl border border-sage-200">
+                        A
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-cream-900" id="profile-name">Alex Johnson</h2>
+                        <p class="text-[11px] text-cream-800 opacity-60">@alexreads • Active Reader</p>
+                        <span class="inline-block mt-1 px-2 py-0.5 bg-sage-100 text-sage-700 text-[10px] rounded-full font-medium" id="profile-role-tag">Role: Student</span>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-sage-600 text-white rounded-2xl shadow-sm flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] opacity-80">Your Total Reading Points</span>
+                        <div class="text-2xl font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-star text-amber-300 text-xl"></i>
+                            <span id="profile-points-display">120</span>
+                        </div>
+                    </div>
+                    <button onclick="navigateTo('donate')" class="px-3 py-2 bg-white text-sage-700 text-xs font-medium rounded-xl shadow-sm">
+                        Redeem Points
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-cream-200 shadow-sm divide-y divide-cream-100 text-xs text-cream-900">
+                    <div class="p-3.5 flex items-center justify-between hover:bg-cream-50 cursor-pointer">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-clock-rotate-left text-cream-800 opacity-60"></i>
+                            <span>Reading History & Notes</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-cream-800 opacity-40 text-[10px]"></i>
+                    </div>
+                    <div class="p-3.5 flex items-center justify-between hover:bg-cream-50 cursor-pointer">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-heart text-terracotta-500"></i>
+                            <span>Donation & Impact History</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-cream-800 opacity-40 text-[10px]"></i>
+                    </div>
+                    <div class="p-3.5 flex items-center justify-between hover:bg-cream-50 cursor-pointer">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-file-invoice text-blue-500"></i>
+                            <span>Tax Deduction Receipts</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-cream-800 opacity-40 text-[10px]"></i>
+                    </div>
+                    <div class="p-3.5 flex items-center justify-between hover:bg-cream-50 cursor-pointer">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-gear text-cream-800 opacity-60"></i>
+                            <span>Settings & Preferences</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-cream-800 opacity-40 text-[10px]"></i>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 8. AUTHOR PORTAL PAGE -->
+            <section id="page-author-portal" class="app-page hidden min-h-full p-5 space-y-5 bg-cream-50 pb-20">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-cream-900">Author & Publisher Hub</h2>
+                        <p class="text-xs text-cream-800 opacity-70">Self-publish eBooks to empower children</p>
+                    </div>
+                    <span class="text-[10px] px-2 py-1 bg-amber-100 text-amber-800 rounded-lg font-semibold">Indie Author</span>
+                </div>
+
+                <div class="p-4 bg-white rounded-2xl border border-cream-200 shadow-sm space-y-3">
+                    <h3 class="text-xs font-bold text-cream-900">Upload New eBook</h3>
+                    
+                    <div class="space-y-2 text-xs">
+                        <div>
+                            <label class="block text-[11px] text-cream-800 opacity-70 mb-1">Book Title</label>
+                            <input type="text" placeholder="Enter book title..." class="w-full p-2.5 bg-cream-50 border border-cream-200 rounded-xl">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-cream-800 opacity-70 mb-1">Genre Category</label>
+                            <select class="w-full p-2.5 bg-cream-50 border border-cream-200 rounded-xl">
+                                <option>Youth Literature</option>
+                                <option>Educational / Textbook</option>
+                                <option>Self Growth</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-cream-800 opacity-70 mb-1">eBook File (EPUB / PDF)</label>
+                            <div class="p-4 border-2 border-dashed border-cream-200 rounded-xl text-center bg-cream-50 hover:bg-cream-100 cursor-pointer">
+                                <i class="fa-solid fa-cloud-arrow-up text-xl text-cream-800 opacity-50 mb-1"></i>
+                                <span class="block text-[11px] text-cream-800 opacity-70">Drag & drop file or click to browse</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="publishBookSuccess()" class="w-full py-2.5 bg-sage-600 text-white rounded-xl text-xs font-medium shadow-sm hover:bg-sage-700">
+                        Publish to Read2Give
+                    </button>
+                </div>
+
+                <div class="p-4 bg-white rounded-2xl border border-cream-200 shadow-sm space-y-2">
+                    <h3 class="text-xs font-bold text-cream-900">Reader Engagement Analytics</h3>
+                    <div class="grid grid-cols-2 gap-2 text-center text-xs">
+                        <div class="p-2.5 bg-cream-50 rounded-xl border border-cream-100">
+                            <span class="block font-bold text-sage-600 text-sm">3,420</span>
+                            <span class="text-[10px] text-cream-800 opacity-60">Total Readers</span>
+                        </div>
+                        <div class="p-2.5 bg-cream-50 rounded-xl border border-cream-100">
+                            <span class="block font-bold text-amber-600 text-sm">18,500</span>
+                            <span class="text-[10px] text-cream-800 opacity-60">Impact Points Generated</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- APP BOTTOM NAVIGATION BAR -->
+        <nav id="app-nav" class="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-cream-200 px-3 py-2 flex justify-around items-center z-20">
+            <button onclick="navigateTo('home')" id="nav-home" class="flex flex-col items-center gap-0.5 text-sage-600 font-semibold text-[10px]">
+                <i class="fa-solid fa-house text-base"></i>
+                <span>Home</span>
+            </button>
+            <button onclick="navigateTo('reader')" id="nav-reader" class="flex flex-col items-center gap-0.5 text-cream-800 opacity-50 hover:opacity-100 text-[10px]">
+                <i class="fa-solid fa-book-open text-base"></i>
+                <span>Read</span>
+            </button>
+            <button onclick="navigateTo('earn')" id="nav-earn" class="flex flex-col items-center gap-0.5 text-cream-800 opacity-50 hover:opacity-100 text-[10px]">
+                <i class="fa-solid fa-star text-base"></i>
+                <span>Earn</span>
+            </button>
+            <button onclick="navigateTo('donate')" id="nav-donate" class="flex flex-col items-center gap-0.5 text-cream-800 opacity-50 hover:opacity-100 text-[10px]">
+                <i class="fa-solid fa-heart text-base"></i>
+                <span>Donate</span>
+            </button>
+            <button onclick="navigateTo('impact')" id="nav-impact" class="flex flex-col items-center gap-0.5 text-cream-800 opacity-50 hover:opacity-100 text-[10px]">
+                <i class="fa-solid fa-chart-line text-base"></i>
+                <span>Impact</span>
+            </button>
+            <button onclick="navigateTo('profile')" id="nav-profile" class="flex flex-col items-center gap-0.5 text-cream-800 opacity-50 hover:opacity-100 text-[10px]">
+                <i class="fa-solid fa-user text-base"></i>
+                <span>Profile</span>
+            </button>
+        </nav>
+
+        <!-- Toast Notification Popup -->
+        <div id="toast" class="absolute top-12 left-1/2 -translate-x-1/2 bg-cream-900 text-white px-4 py-2 rounded-2xl text-xs shadow-lg flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-300 z-50">
+            <i class="fa-solid fa-circle-check text-sage-400"></i>
+            <span id="toast-message">Notification Message</span>
+        </div>
+
+        <!-- Note Study Modal -->
+        <div id="note-modal" class="absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white w-full max-w-xs p-4 rounded-2xl space-y-3 shadow-xl">
+                <h4 class="text-xs font-bold text-cream-900 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-sage-600"></i> Take Study Note
+                </h4>
+                <textarea placeholder="Write down key takeaways or quotes..." class="w-full h-24 p-2 bg-cream-50 border border-cream-200 rounded-xl text-xs focus:outline-none"></textarea>
+                <div class="flex gap-2">
+                    <button onclick="closeNoteModal()" class="flex-1 py-1.5 bg-cream-100 text-cream-800 rounded-xl text-xs">Cancel</button>
+                    <button onclick="saveNote()" class="flex-1 py-1.5 bg-sage-600 text-white rounded-xl text-xs">Save Note</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Note -->
+    <footer class="text-center my-3 text-[11px] text-cream-800 opacity-60">
+        Read2Give Prototype V3 • Zen & Ergonomic Study Style
+    </footer>
+
+    <!-- Interactive JavaScript Logic -->
+    <script>
+        let currentRole = 'student'; 
+        let currentPoints = 120;
+        let pomodoroSeconds = 1490;
+        let pomodoroRunning = false;
+        let pomodoroInterval = null;
+        let currentFontSize = 14;
+
+        function navigateTo(pageId) {
+            document.querySelectorAll('.app-page').forEach(page => page.classList.add('hidden'));
+            const targetPage = document.getElementById(`page-${pageId}`);
+            if (targetPage) targetPage.classList.remove('hidden');
+
+            const navButtons = document.querySelectorAll('#app-nav button');
+            navButtons.forEach(btn => {
+                btn.classList.remove('text-sage-600', 'font-semibold');
+                btn.classList.add('text-cream-800', 'opacity-50');
+            });
+
+            const activeNavBtn = document.getElementById(`nav-${pageId}`);
+            if (activeNavBtn) {
+                activeNavBtn.classList.add('text-sage-600', 'font-semibold');
+                activeNavBtn.classList.remove('opacity-50');
+            }
+        }
+
+        function setRole(role) {
+            currentRole = role;
+            
+            document.getElementById('btn-role-student').className = role === 'student' ? 'px-3 py-1.5 rounded-lg text-xs font-medium bg-white text-cream-900 shadow-sm' : 'px-3 py-1.5 rounded-lg text-xs font-medium text-cream-800 opacity-70';
+            document.getElementById('btn-role-adult').className = role === 'adult' ? 'px-3 py-1.5 rounded-lg text-xs font-medium bg-white text-cream-900 shadow-sm' : 'px-3 py-1.5 rounded-lg text-xs font-medium text-cream-800 opacity-70';
+            document.getElementById('btn-role-author').className = role === 'author' ? 'px-3 py-1.5 rounded-lg text-xs font-medium bg-white text-cream-900 shadow-sm' : 'px-3 py-1.5 rounded-lg text-xs font-medium text-cream-800 opacity-70';
+
+            const badge = document.getElementById('role-badge');
+            const profileTag = document.getElementById('profile-role-tag');
+            const adultSponsorCard = document.getElementById('adult-sponsor-card');
+
+            if (role === 'student') {
+                badge.innerText = 'Student';
+                profileTag.innerText = 'Role: Student';
+                adultSponsorCard.classList.add('hidden');
+                showToast('Switched to Student Mode (Free Reading)');
+            } else if (role === 'adult') {
+                badge.innerText = 'Adult Sponsor';
+                profileTag.innerText = 'Role: Adult Reader / Donor';
+                adultSponsorCard.classList.remove('hidden');
+                showToast('Switched to Adult Reader Mode');
+            } else {
+                badge.innerText = 'Author';
+                profileTag.innerText = 'Role: Author / Publisher';
+                adultSponsorCard.classList.add('hidden');
+                showToast('Switched to Author Portal Mode');
+            }
+        }
+
+        function setDevice(mode) {
+            const frame = document.getElementById('app-viewport');
+            const statusBar = document.getElementById('status-bar');
+
+            if (mode === 'desktop') {
+                frame.classList.remove('device-mobile');
+                frame.classList.add('device-desktop');
+                statusBar.classList.add('hidden');
+                document.getElementById('btn-dev-mobile').className = 'px-2.5 py-1 rounded-lg text-xs font-medium text-cream-800 opacity-70';
+                document.getElementById('btn-dev-desktop').className = 'px-2.5 py-1 rounded-lg text-xs font-medium bg-white shadow-sm text-cream-900';
+            } else {
+                frame.classList.remove('device-desktop');
+                frame.classList.add('device-mobile');
+                statusBar.classList.remove('hidden');
+                document.getElementById('btn-dev-desktop').className = 'px-2.5 py-1 rounded-lg text-xs font-medium text-cream-800 opacity-70';
+                document.getElementById('btn-dev-mobile').className = 'px-2.5 py-1 rounded-lg text-xs font-medium bg-white shadow-sm text-cream-900';
+            }
+        }
+
+        function updatePointsDisplays() {
+            document.getElementById('user-points-display').innerText = currentPoints;
+            document.getElementById('earn-page-points').innerText = `${currentPoints} pts`;
+            document.getElementById('donate-page-points').innerText = `${currentPoints} pts`;
+            document.getElementById('profile-points-display').innerText = currentPoints;
+        }
+
+        function completeChapter() {
+            currentPoints += 5;
+            updatePointsDisplays();
+            showToast('Chapter Completed! Earned +5 Points 🎉');
+        }
+
+        function claimDailyPoints() {
+            currentPoints += 5;
+            updatePointsDisplays();
+            const btn = document.getElementById('btn-daily-claim');
+            btn.innerText = 'Claimed Today ✓';
+            btn.disabled = true;
+            btn.className = 'w-full py-2 bg-cream-200 text-cream-800 rounded-xl text-xs font-medium opacity-70 cursor-not-allowed';
+            showToast('Daily check-in reward claimed (+5 pts)!');
+        }
+
+        function redeemReward(itemName, cost) {
+            if (currentPoints >= cost) {
+                currentPoints -= cost;
+                updatePointsDisplays();
+                showToast(`Successfully redeemed "${itemName}"!`);
+            } else {
+                showToast(`Need ${cost - currentPoints} more points to redeem.`);
+            }
+        }
+
+        function toggleReaderControls() {
+            const panel = document.getElementById('reader-controls-panel');
+            panel.classList.toggle('hidden');
+        }
+
+        function setReaderTheme(theme) {
+            const reader = document.getElementById('page-reader');
+            reader.className = `app-page min-h-full flex flex-col transition-colors duration-200 theme-${theme}`;
+        }
+
+        function changeFontSize(delta) {
+            currentFontSize = Math.max(12, Math.min(20, currentFontSize + delta));
+            const container = document.getElementById('reader-text-container');
+            container.style.fontSize = `${currentFontSize}px`;
+        }
+
+        function toggleFontFamily() {
+            const container = document.getElementById('reader-text-container');
+            const btn = document.getElementById('btn-font-family');
+            if (container.classList.contains('reader-serif')) {
+                container.classList.remove('reader-serif');
+                btn.innerText = 'Sans';
+            } else {
+                container.classList.add('reader-serif');
+                btn.innerText = 'Serif';
+            }
+        }
+
+        function togglePomodoro() {
+            const btn = document.getElementById('btn-pomo');
+            if (pomodoroRunning) {
+                clearInterval(pomodoroInterval);
+                pomodoroRunning = false;
+                btn.innerText = 'Resume';
+            } else {
+                pomodoroRunning = true;
+                btn.innerText = 'Pause';
+                pomodoroInterval = setInterval(() => {
+                    if (pomodoroSeconds > 0) {
+                        pomodoroSeconds--;
+                        const mins = Math.floor(pomodoroSeconds / 60);
+                        const secs = pomodoroSeconds % 60;
+                        document.getElementById('pomodoro-timer').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                    } else {
+                        clearInterval(pomodoroInterval);
+                        showToast('Study timer complete! Earned +20 Focus Points!');
+                        currentPoints += 20;
+                        updatePointsDisplays();
+                    }
+                }, 1000);
+            }
+        }
+
+        function openNoteModal() {
+            document.getElementById('note-modal').classList.remove('hidden');
+        }
+
+        function closeNoteModal() {
+            document.getElementById('note-modal').classList.add('hidden');
+        }
+
+        function saveNote() {
+            closeNoteModal();
+            showToast('Note saved to reading history!');
+        }
+
+        function showTaxReceiptModal() {
+            showToast('Donation successful! Tax receipt issued.');
+        }
+
+        function publishBookSuccess() {
+            showToast('eBook submitted for review!');
+            navigateTo('home');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+
+        // Initialize App
+        setRole('student');
+        navigateTo('home');
+    </script>
+</body>
+</html>
